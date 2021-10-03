@@ -32,14 +32,14 @@ public class LineChart extends ApplicationFrame {
     public String ZweiteMessgroeßeFileFilter2 ="";
     public String Anstieg = "";
 
-    public LineChart(String applicationTitle, String chartTitle, boolean createAllJpegs, boolean added_Correlation, boolean addedAB ,boolean addedAB_Regression) {
+    public LineChart(String applicationTitle, String chartTitle, boolean createAllJpegs, boolean added_Correlation, boolean addedA ,boolean addedB, boolean addedA_Regression,boolean addedB_Regression) {
         super(applicationTitle);
         if(!createAllJpegs){
             JFreeChart xylineChart = ChartFactory.createXYLineChart(
                     chartTitle ,
                     "Jahre" ,
-                    "Korrelationskoeffizient" ,
-                    createDataset(null, null, null,added_Correlation,addedAB,addedAB_Regression) ,
+                    "Korrelationskoeffizient " ,
+                    createDataset(null, null, null,added_Correlation,addedA,addedB,addedA_Regression,addedB_Regression) ,
                     PlotOrientation.VERTICAL ,
                     true , true , false);
 
@@ -65,25 +65,31 @@ public class LineChart extends ApplicationFrame {
             plot.setRenderer( renderer );
             setContentPane( chartPanel );
         }else if(createAllJpegs){
-            String[] Messstellen = new String[]{"ILL1","0103","0202","0301","0401","0502","1102","1301","2101","2401","2701","PIL1"};
-            String[] ZweiteMessgroeßen = new String[]{"LUTE","LUFE","GSTR","WIRI","WIGE"};
-
+            String[] Messstellen = new String[]{"ILL1"/*,"0103","0202","0301","0401","0502","1102","1301","2101","2401","2701","PIL1"*/};
+            String[] ZweiteMessgroeßen = new String[]{"LUTE"/*,"LUFE","GSTR","WIRI","WIGE"*/};
             int counter = 1;
             for(var ms: Messstellen){
                 for(var zweiteM: ZweiteMessgroeßen){
+                    String yAxisLabel = "Korrelationskoeffizient";
+                    if(zweiteM.equals("LUTE")&& addedB && addedB_Regression){
+                        yAxisLabel = "Grad Celsius /100";
+                    }else if(addedA && addedA_Regression){
+                        yAxisLabel = "Bodennahes Ozon (µg/m3)/100";
+                    }
                     System.out.println("Creating "+counter++ +" out of "+(Messstellen.length*ZweiteMessgroeßen.length) + " Graphs");
                     JFreeChart temp_xylineChart = ChartFactory.createXYLineChart(
                             chartTitle ,
                             "Jahre" ,
-                            "Korrelationskoeffizient" ,
-                            createDataset("O3", zweiteM, ms,added_Correlation,addedAB,addedAB_Regression) ,
+                            yAxisLabel ,
+                            createDataset("O3", zweiteM, ms,added_Correlation,addedA,addedB,addedA_Regression,addedB_Regression) ,
                             PlotOrientation.VERTICAL ,
                             true , true , false);
 
                     String basic_path_InputFiles = "src\\resources\\Output_Files\\";
-                    File XYChart = new File( basic_path_InputFiles+ms+"_O3_"+zweiteM+"_Cor"+(added_Correlation==true?"1":"0")+"_AB"+(addedAB==true?"1":"0")+"_ABReg"+(addedAB_Regression==true?"1":"0")+".jpeg" );
+                    File XYChart = new File( basic_path_InputFiles+ms+"_O3_"+zweiteM+"_Cor"+(added_Correlation==true?"1":"0")+"_A"+(addedA==true?"1":"0")+"_B"+(addedB==true?"1":"0")
+                            +"_AReg"+(addedA_Regression==true?"1":"0")+"_BReg"+(addedB_Regression==true?"1":"0")+".jpeg" );
                     try {
-                        ChartUtils.saveChartAsJPEG( XYChart, temp_xylineChart, 1900, 1000);
+                        ChartUtils.saveChartAsJPEG( XYChart, temp_xylineChart, 700, 400);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -95,7 +101,7 @@ public class LineChart extends ApplicationFrame {
 
     }
 
-    public XYDataset createDataset(String ersteMessgroeße, String zweiteMessgroeße, String Messstelle, boolean added_Correlation, boolean addedAB, boolean addedAB_Regression ) {
+    public XYDataset createDataset(String ersteMessgroeße, String zweiteMessgroeße, String Messstelle, boolean added_Correlation, boolean addedA, boolean addedB, boolean addedA_Regression, boolean addedB_Regression ) {
 
         /*
         * ILL1, 0103, 0202, 0301, 0401, 0502, 1102, 1301, 2101, 2401, 2701, PIL1
@@ -227,7 +233,7 @@ public class LineChart extends ApplicationFrame {
         double y1 =(double)a+(b*xList.get(0));
         double y2 =(double)a+(b*xList.get(xList.size()-1));
         Anstieg = decimalFormat.format((y2-y1)*100);
-        final XYSeries data2 = new XYSeries("Regressionslinie mit Koeffizientenänderung von: "+Anstieg + " " + "     Durchschnittliche Korrelation beträgt: " + durchschnittlicheKorrelation );
+        final XYSeries data2 = new XYSeries("Regressionslinie mit Koeffizientenänderung von: "+Anstieg + " " + " Durchs Korrelation beträgt: " + durchschnittlicheKorrelation + "  Stat. sig. für Alpha 0,05 :" + (p==true?"Ja":"Nein"));
 
         data2.add((double)xList.get(0),y1);
         data2.add((double)xList.get(xList.size()-1),y2);
@@ -242,7 +248,7 @@ public class LineChart extends ApplicationFrame {
         double y1_A =(double)a_A+(b_A*xList.get(0));
         double y2_A =(double)a_A+(b_A*xList.get(xList.size()-1));
         var Ans_A = decimalFormat.format((y2_A-y1_A)*100);
-        final XYSeries data5 = new XYSeries("Änderung " +ersteMessgroeße + ": "+Ans_A + " " + "     Durchs: " + durchschnittlicheKorrelationA);
+        final XYSeries data5 = new XYSeries("Änderung " +ersteMessgroeße + ": "+Ans_A + " " + "       Durchschnitt: " + durchschnittlicheKorrelationA+ "            Statistisch signifikant für Alpha 0,05 :" + (p==true?"Ja":"Nein"));
         data5.add((double)xList.get(0),y1_A);
         data5.add((double)xList.get(xList.size()-1),y2_A);
 
@@ -254,7 +260,7 @@ public class LineChart extends ApplicationFrame {
         double y1_B =(double)a_B+(b_B*xList.get(0));
         double y2_B =(double)a_B+(b_B*xList.get(xList.size()-1));
         var Ans_B = decimalFormat.format((y2_B-y1_B)*100);
-        final XYSeries data6 = new XYSeries("Änderung " +zweiteMessgroeße + ": "+Ans_B + " " + "     Durchs: " + durchschnittlicheKorrelationB+ "            Statistisch signifikant für Alpha 0,05 :" + (p==true?"Ja":"Nein"));
+        final XYSeries data6 = new XYSeries("Änderung " +zweiteMessgroeße + ": "+Ans_B + " " + "       Durchschnitt: " + durchschnittlicheKorrelationB+ "            Statistisch signifikant für Alpha 0,05 :" + (p==true?"Ja":"Nein"));
         data6.add((double)xList.get(0),y1_B);
         data6.add((double)xList.get(xList.size()-1),y2_B);
 
@@ -264,20 +270,41 @@ public class LineChart extends ApplicationFrame {
             dataset.addSeries(data1);
             dataset.addSeries(data2);
         }
-        if(addedAB){
+        if(addedA){
             dataset.addSeries(data3);
+        }
+        if(addedB){
             dataset.addSeries(data4);
         }
-        if(addedAB_Regression){
+        if(addedA_Regression){
             dataset.addSeries(data5);
+        }
+        if(addedB_Regression){
             dataset.addSeries(data6);
         }
         return dataset;
     }
 
     public static void main( String[ ] args ) {
+        boolean onlyA = false;
+        boolean onlyB = false;
+        boolean added_Correlation = true;
+
+        boolean addedA = false;
+        boolean addedB = false;
+        boolean addedA_Regression = false;
+        boolean addedB_Regression = false;
+
+        if(onlyA){
+            addedA=true;
+            addedA_Regression=true;
+        }
+        if(onlyB){
+            addedB=true;
+            addedB_Regression=true;
+        }
         LineChart chart = new LineChart("Data",
-                "Korrelationsdaten",true,true, true,true);
+                "",true,added_Correlation,addedA,addedB,addedA_Regression,addedB_Regression);
         chart.pack( );
         RefineryUtilities.centerFrameOnScreen( chart );
         chart.setVisible( true );
